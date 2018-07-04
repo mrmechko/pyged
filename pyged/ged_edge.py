@@ -16,7 +16,9 @@ class GedEdge(GedBase):
     A node is regarded as a graph and edges are regarded as nodes
     """
     
-    def __init__(self, g1, g2, greedy, vertex1_id, vertex2_id, verbose):
+    def __init__(self, g1, g2, greedy, vertex1_id, vertex2_id, verbose, weight_label=None):
+        if not weight_label:
+            weight_label="weight"
         v1 = g1.nodes()[vertex1_id]
         v2 = g2.nodes()[vertex2_id]
         
@@ -24,14 +26,13 @@ class GedEdge(GedBase):
         GedBase.__init__(self, v1, v2, greedy, verbose)
         
         # List of edge weights for v1
-        self.e1 = [g1.edge[v1][e]['weight'] for e in g1.neighbors(v1)]
-        self.hem1 = [g1.node[v]['hemisphere'] for v in g1.neighbors(v1)]
+        # if weights don't exist set them to 1
+        self.e1 = [g1.edge[v1][e].get(weight_label, 1) for e in g1.neighbors(v1)]
         self.neigh1 = [g1.node[v]['label'] for v in g1.neighbors(v1)]
         self.N = len(self.e1)
         
         # List of edge weights for v2
-        self.e2 = [g2.edge[v2][e]['weight'] for e in g2.neighbors(v2)]
-        self.hem2 = [g2.node[v]['hemisphere'] for v in g2.neighbors(v2)]
+        self.e2 = [g2.edge[v2][e].get(weight_label, 1) for e in g2.neighbors(v2)]
         self.neigh2 = [g2.node[v]['label'] for v in g2.neighbors(v2)]
         self.M = len(self.e2)
         
@@ -56,17 +57,11 @@ class GedEdge(GedBase):
         return cost
         
     def substitute_cost(self, i, j):
-        # Constrain substitutions between nodes from the same hemisphere
-        if self.hem1[i] == self.hem2[j]:
+        cos_dist = distance.cosine(self.neigh1[i], self.neigh2[j])
 
-            cos_dist = distance.cosine(self.neigh1[i], self.neigh2[j])
-
-            if cos_dist < 1.0:
-                # Edge substitution cost
-                cost = cos_dist * distance.euclidean(self.e1[i], self.e2[j])
-            else:
-                cost = sys.maxint
+        if cos_dist < 1.0:
+            # Edge substitution cost
+            cost = cos_dist * distance.euclidean(self.e1[i], self.e2[j])
         else:
             cost = sys.maxint
-            
         return cost

@@ -114,7 +114,7 @@ class GedBase(object):
                     value = cost_matrix[row, column]
                     print('%d, %d, %.4f' % (row, column, value))
     
-        return cost_matrix[row_ind, col_ind]
+        return cost_matrix[self.row_ind, self.col_ind]
 
     def edit_path(self):
         if self.row_ind is None or self.col_ind is None:
